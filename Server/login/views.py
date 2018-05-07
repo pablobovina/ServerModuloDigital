@@ -21,3 +21,7 @@ def log_user(request, username):
         return HttpResponse("{} {} ".format(u, p))
 
     return HttpResponse("usuario no autenticado {} {} {}".format(user, u, p))
+
+
+def logout_user(request, username):
+    return HttpResponse("nos vemos {}".format(username));

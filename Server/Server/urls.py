@@ -24,5 +24,5 @@ urlpatterns = [
     url(r'^log/', include('unit_logs.urls')),
     url(r'^admin/', admin.site.urls),
     url(r'^(logout|login)/', include('login.urls')),
-    url('.*', TemplateView.as_view(template_name='index.html')),
+    #url('.*', TemplateView.as_view(template_name='index.html')),
 ]
