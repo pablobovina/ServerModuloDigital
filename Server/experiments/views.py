@@ -92,7 +92,7 @@ def list_experiment(request):
     return dd
 
 
-@login_required
+# @login_required
 def experiment_switch(request, username, experiment):
 
     res = {}
@@ -110,6 +110,6 @@ def experiment_switch(request, username, experiment):
         res = update_experiment(request, username, int(experiment))
 
     if request.method == "DELETE":
-        res = delete_experiment(request, int(experiment))
+        res = delete_experiment(request, username, int(experiment))
 
     return HttpResponse(json.dumps(res), content_type="application/json")

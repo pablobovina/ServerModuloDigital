@@ -24,4 +24,4 @@ def log_user(request, username):
 
 
 def logout_user(request, username):
-    return HttpResponse("nos vemos {}".format(username));
+    return HttpResponse("nos vemos {}".format(username))
