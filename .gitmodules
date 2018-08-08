@@ -1,0 +1,6 @@
+[submodule "Server/executor/ModuloDigital"]
+	path = Server/executor/ModuloDigital
+	url = https://github.com/pablobovina/ModuloDigital.git
+[submodule "Server/UserInterfaceModuloDigital"]
+	path = Server/UserInterfaceModuloDigital
+	url = https://github.com/pablobovina/UserInterfaceModuloDigital.git
