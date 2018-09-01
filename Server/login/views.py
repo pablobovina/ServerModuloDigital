@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 
 
 def log_user(request, username):
@@ -18,10 +18,11 @@ def log_user(request, username):
 
     if user is not None:
         login(request, user)
-        return HttpResponse("{} {} ".format(u, p))
+        return HttpResponse("login success for {}".format(u))
 
-    return HttpResponse("usuario no autenticado {} {} {}".format(user, u, p))
+    return HttpResponse("usuario no autenticado {} {} {}".format(user, u, p), status=500)
 
 
 def logout_user(request, username):
-    return HttpResponse("nos vemos {}".format(username))
+    logout(request)
+    return HttpResponse("logout success for {}".format(username))

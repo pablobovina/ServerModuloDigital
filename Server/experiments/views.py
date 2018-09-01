@@ -92,7 +92,7 @@ def list_experiment(request):
     return dd
 
 
-# @login_required
+@login_required
 def experiment_switch(request, username, experiment):
 
     res = {}
