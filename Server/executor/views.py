@@ -2,20 +2,23 @@
 from __future__ import unicode_literals
 
 from django.http import HttpResponse
-from ModuloDigital.main import main
-import json
+from ModuloDigital.main import ModDig
+from copy import deepcopy
+from shutil import rmtree
 
 
 def run_experiment(request, username, experiment):
     print "corremos experimento"
     experiments = request.session["experiments"]
     d = experiments[username][experiment]
-    try:
-        main(d)
+    copy_d = deepcopy(d)
+    out_d = "./out/{}".format(username)
+    log_d = "./log/{}".format(username)
+    error_d = "./error/{}".format(username)
+    m = ModDig(copy_d, out_d, log_d, error_d)
+    m.setDaemon(True)
+    m.start()
 
-    except Exception as e:
-        msg = [e.message]
-        return HttpResponse(json.dumps(msg), content_type="application/json", status=500)
     return HttpResponse("Vista run_experiment")
 
 
