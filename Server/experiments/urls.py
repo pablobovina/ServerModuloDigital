@@ -3,5 +3,5 @@ from django.conf.urls import url
 from . import views
 
 urlpatterns = [
-    url(r'(?P<experiment>.+)?', views.experiment_switch),
+    url(r'(?P<id>.+)?', views.experiment_switch),
 ]

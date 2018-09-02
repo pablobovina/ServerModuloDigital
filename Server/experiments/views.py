@@ -3,113 +3,88 @@ from __future__ import unicode_literals
 
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
-
-#### MOCK
-import datetime
+from models import Experiment
+from datetime import datetime
 import json
-import uuid
-from random import randrange, choice
-from pprint import pprint
-#### MOCK
-
-experiments = {}
-counter = 0
 
 
-def create_experiment(request, username):
-    global counter
-    global experiments
-
-    if username not in experiments.keys():
-        experiments[username] = {}
-
-    experiments[username][counter] = json.loads(request.body)
-    res = counter
-    counter += 1
-
-    request.session["experiments"] = experiments
-    request.session["counter"] = counter
-    return res
+def create_experiment(username, experiment):
+    author = username
+    date_time = datetime.now()
+    resume = json.loads(experiment)["settings"]["a_description"]
+    status = "created"
+    e = Experiment(author=author, experiment=experiment, date_time=date_time, resume=resume, status=status)
+    e.save()
+    return e.id
 
 
-def read_experiment(request, username, experiment):
-    global experiments
-    if username not in experiments.keys():
+def read_experiment(username, id):
+    e = Experiment.objects.get(author=username, id=id)
+    if e.experiment:
+        return e.experiment
+    return False
+
+
+def update_experiment(username, id, experiment):
+    try:
+        e = Experiment.objects.get(author=username, id=id)
+        e.experiment = experiment
+        e.date_time = datetime.now()
+        e.resume = json.loads(experiment)["settings"]["a_description"]
+        e.status = "created"
+        e.save()
+        return id
+    except Exception as ex:
+        print ex.message
         return False
-    if experiment not in experiments[username].keys():
+
+
+def delete_experiment(username, id):
+    try:
+        Experiment.objects.get(author=username, id=id).delete()
+        return True
+    except Exception as e:
+        print e.message
         return False
-    else:
-        return experiments[username][experiment]
 
 
-def update_experiment(request, username, experiment):
-    global experiments
-    if username not in experiments.keys():
-        return False
-    if experiment not in experiments[username].keys():
-        return False
-    else:
-        experiments[username][experiment] = json.loads(request.body)
-
-    request.session["experiments"] = experiments
-    return True
-
-
-def delete_experiment(request, username, experiment):
-    global experiments
-    if username not in experiments.keys():
-        return False
-    if experiment not in experiments[username].keys():
-        return False
-    else:
-        del(experiments[username][experiment])
-
-    request.session["experiments"] = experiments
-    return True
-
-
-def list_experiment(request):
-    global experiments
+def list_experiment(username):
     d = []
-    # for i in range(n_users):
-    #     d.append({"id": str(uuid.uuid4()),
-    #               "created": [x for x in random_date(startDate, 1)][0].strftime("%c"),
-    #               "author": choice(authors),
-    #               "resume": choice(descr),
-    #               "state": choice(states)})
-
-    for author in experiments:
-        for experiment in experiments[author]:
-            d.append({
-                "id": str(experiment),
-                "created": "10/11/1988 20:30:34",
-                "author": author,
-                "resume": experiments[author][experiment]["settings"]["a_name"],
-                "state": "creado"
-            })
+    experiments = Experiment.objects.filter(author=username)
+    for experiment in experiments:
+        d.append({
+            "id": str(experiment.id),
+            "created": experiment.date_time.strftime("%Y-%m-%d %H:%M:%S"),
+            "author": experiment.author,
+            "resume": experiment.resume,
+            "state": experiment.status
+        })
 
     dd = {"error": False, "msg": "tu consulta no esta permitida", "username": "jperez", "authError": False, "datas": d}
     return dd
 
 
 @login_required
-def experiment_switch(request, username, experiment):
+def experiment_switch(request, username, id):
 
+    u = request.user
     res = {}
+
     if request.method == "POST":
-        res = create_experiment(request, username)
+        res = create_experiment(u, request.body)
         res = {"expId": res}
+
     if request.method == "GET":
-        if experiment:
-            res = read_experiment(request, username, int(experiment))
-            res = {"data": res}
+        if id:
+            res = read_experiment(u, int(id))
+            res = {"data": json.loads(res)}
         else:
-            res = list_experiment(request)
+            res = list_experiment(u)
 
     if request.method == "PATCH":
-        res = update_experiment(request, username, int(experiment))
+        res = update_experiment(u, int(id), request.body)
 
     if request.method == "DELETE":
-        res = delete_experiment(request, username, int(experiment))
+        res = delete_experiment(u, int(id))
 
     return HttpResponse(json.dumps(res), content_type="application/json")

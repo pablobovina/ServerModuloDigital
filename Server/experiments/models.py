@@ -3,4 +3,10 @@ from __future__ import unicode_literals
 
 from django.db import models
 
-# Create your models here.
+
+class Experiment(models.Model):
+    author = models.TextField()
+    experiment = models.TextField()
+    date_time = models.DateTimeField()
+    resume = models.TextField()
+    status = models.TextField()
