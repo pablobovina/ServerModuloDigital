@@ -3,65 +3,11 @@ from __future__ import unicode_literals
 
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
-from models import Experiment
-from datetime import datetime
+from experiment import create_experiment, read_experiment, list_experiment, delete_experiment, update_experiment
+from result_manager_thread import *
+from manager_thread import create_manager_thread, get_pid_name_by_result_id
+from result import create_result, result_by_user, result_to_zip, get_result_experiment_by_user_and_id
 import json
-
-
-def create_experiment(username, experiment):
-    author = username
-    date_time = datetime.now()
-    resume = json.loads(experiment)["settings"]["a_description"]
-    status = "created"
-    e = Experiment(author=author, experiment=experiment, date_time=date_time, resume=resume, status=status)
-    e.save()
-    return e.id
-
-
-def read_experiment(username, id):
-    e = Experiment.objects.get(author=username, id=id)
-    if e.experiment:
-        return e.experiment
-    return False
-
-
-def update_experiment(username, id, experiment):
-    try:
-        e = Experiment.objects.get(author=username, id=id)
-        e.experiment = experiment
-        e.date_time = datetime.now()
-        e.resume = json.loads(experiment)["settings"]["a_description"]
-        e.status = "created"
-        e.save()
-        return id
-    except Exception as ex:
-        print ex.message
-        return False
-
-
-def delete_experiment(username, id):
-    try:
-        Experiment.objects.get(author=username, id=id).delete()
-        return True
-    except Exception as e:
-        print e.message
-        return False
-
-
-def list_experiment(username):
-    d = []
-    experiments = Experiment.objects.filter(author=username)
-    for experiment in experiments:
-        d.append({
-            "id": str(experiment.id),
-            "created": experiment.date_time.strftime("%Y-%m-%d %H:%M:%S"),
-            "author": experiment.author,
-            "resume": experiment.resume,
-            "state": experiment.status
-        })
-
-    dd = {"error": False, "msg": "tu consulta no esta permitida", "username": "jperez", "authError": False, "datas": d}
-    return dd
 
 
 @login_required
@@ -82,9 +28,48 @@ def experiment_switch(request, username, id):
             res = list_experiment(u)
 
     if request.method == "PATCH":
-        res = update_experiment(u, int(id), request.body)
+        update_experiment(u, int(id), request.body)
 
     if request.method == "DELETE":
-        res = delete_experiment(u, int(id))
+        delete_experiment(u, int(id))
 
     return HttpResponse(json.dumps(res), content_type="application/json")
+
+
+@login_required
+def run_experiment(request, username, id):
+    u = request.user
+    data = json.loads(read_experiment(u, int(id)))
+    id_result = create_result(username, data)
+    id_thread = create_manager_thread(username, id_result)
+    mgr = ResultManagerThread()
+    mgr.new_thread(u, int(id), id_result, id_thread, data)
+    mgr.on_start()
+    return HttpResponse(json.dumps({"expId": id, "expIdRes": id_result}))
+
+
+@login_required
+def stop_result(request, username, id):
+    pid, name = get_pid_name_by_result_id(request.user, int(id))
+    mgr = ResultManagerThread()
+    mgr.stop_thread(pid, name)
+    return HttpResponse(json.dumps({"pid": pid, "name": name}))
+
+
+@login_required
+def list_result(request, username):
+    return HttpResponse(json.dumps(result_by_user(request.user)), content_type="application/json")
+
+
+@login_required
+def get_result_experiment(request, username, id):
+    experiment = get_result_experiment_by_user_and_id(request.user, int(id))
+    res = {"data": json.loads(experiment)}
+    return HttpResponse(json.dumps(res), content_type="application/json")
+
+
+@login_required
+def zip_result(request, username, id):
+    return HttpResponse(result_to_zip(username, int(id)), content_type="application/zip")
+
+

@@ -20,8 +20,6 @@ from django.views.generic import TemplateView
 urlpatterns = [
     url(r'^user/(?P<username>.+)/experiments/', include('experiments.urls')),
     url(r'^reports/(?P<username>.+)/(?P<experiment>.+)/', include('reports.urls')),
-    url(r'^user/(?P<username>.+)/executor/', include('executor.urls')),
-    url(r'^executor/', include('executor.urls')),
     url(r'^log/', include('unit_logs.urls')),
     url(r'^admin/', admin.site.urls),
     url(r'^(logout|login)/', include('login.urls')),
