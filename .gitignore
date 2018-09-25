@@ -8,3 +8,4 @@ pip-selfcheck.json
 *.pyc
 .DS_Store
 db.sqlite3
+Server/experiments/migrations/*.*
