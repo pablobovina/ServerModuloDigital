@@ -20,7 +20,7 @@ def log_user(request, username):
         login(request, user)
         return HttpResponse("login success for {}".format(u))
 
-    return HttpResponse("usuario no autenticado {} {} {}".format(user, u, p), status=500)
+    return HttpResponse(json.dumps({"error": 'usuario "{}" no autenticado'.format(u)}), status=500)
 
 
 def logout_user(request, username):

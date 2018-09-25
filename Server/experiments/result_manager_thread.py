@@ -1,5 +1,6 @@
 from ModuloDigital.main import ModDig
-from manager_thread import bind_manager_thread, finish_manager_thread
+from ModuloDigital.dry_run import DryRun
+from manager_thread import bind_manager_thread, finish_manager_thread, filter_running, update_killer
 from result import update_result_status_running, \
                 update_result_status_error, \
                 update_result_log, \
@@ -24,6 +25,7 @@ class ResultManagerThread(object):
     kill_event = None
     name = None
     stop = None
+    killer = None
 
     def new_thread(self, user, id_experiment, id_result, id_thread, data):
         self.user = user
@@ -76,3 +78,25 @@ class ResultManagerThread(object):
         update_result_err(self.user, self.id_result, err)
         update_result_log(self.user, self.id_result, log_lines)
         finish_manager_thread(self.user, self.id_thread, self.pid)
+
+    def kill_all(self, user):
+        t_list = filter_running()
+        res = []
+        t_all = threading.enumerate()
+        for t in t_list:
+            for tt in t_all:
+                if tt.ident == t.pid:
+                    tt.terminate_now = True
+                    update_killer(user, t.id)
+                    res.append([t.pid, t.author, user])
+        self.killer = res
+        return res
+
+    def new_dry_run(self, user, data):
+        self.user = user
+        self.data = data
+        self.out_d = "./out/{}".format(user)
+        self.log_d = "./log/{}".format(user)
+        self.error_d = "./error/{}".format(user)
+        self.mod_dig = DryRun(parent=self)
+        return self.mod_dig

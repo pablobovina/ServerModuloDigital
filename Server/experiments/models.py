@@ -30,4 +30,5 @@ class ManagerThread(models.Model):
     id_result = models.IntegerField()
     date_time = models.DateTimeField()
     name = models.TextField()
+    killer = models.TextField()
 

@@ -4,6 +4,7 @@ from . import views
 
 urlpatterns = [
     url(r'results', views.list_result),
+    url(r'stop_all', views.stop_all),
     url(r'(?P<id>.+)?/run', views.run_experiment),
     url(r'(?P<id>.+)?/stop', views.stop_result),
     url(r'(?P<id>.+)?/result_experiment', views.get_result_experiment),

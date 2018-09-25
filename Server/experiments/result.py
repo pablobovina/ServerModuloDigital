@@ -6,12 +6,14 @@ import StringIO
 import zipfile
 import cStringIO
 import codecs
+import pytz
+from pytz import country_timezones, timezone
 
 
 def create_result(username, data):
     experiment = json.dumps(data)
     author = username
-    date_time = datetime.now()
+    date_time = datetime.now(pytz.timezone(country_timezones["AR"][1]))
     resume = json.loads(experiment)["settings"]["a_description"]
     status = "partial"
     e = Result(author=author, experiment=experiment, date_time=date_time, resume=resume, status=status,
@@ -25,7 +27,7 @@ def update_result_data(username, id, data):
     d = json.loads(e.data)
     d["a"].append(data[0])
     d["b"].append(data[1])
-    e.date_time = datetime.now()
+    e.date_time = datetime.now(pytz.timezone(country_timezones["AR"][1]))
     e.data = json.dumps(d)
     e.save()
 
@@ -40,7 +42,7 @@ def update_result_err(username, id, data):
 
 def update_result_log(username, id, data):
     e = Result.objects.get(author=username, id=id)
-    e.date_time = datetime.now()
+    e.date_time = datetime.now(pytz.timezone(country_timezones["AR"][1]))
     e.log = json.dumps(data)
     e.save()
 
@@ -133,10 +135,11 @@ def result_to_zip(username, id):
 def result_by_user(username):
     d = []
     results = Result.objects.filter(author=username)
+    cba = timezone(country_timezones["AR"][0])
     for result in results:
         d.append({
             "id": str(result.id),
-            "created": result.date_time.strftime("%Y-%m-%d %H:%M:%S"),
+            "created": result.date_time.astimezone(cba).strftime("%Y-%m-%d %H:%M:%S"),
             "author": result.author,
             "resume": result.resume,
             "state": result.status
@@ -149,3 +152,8 @@ def result_by_user(username):
 def get_result_experiment_by_user_and_id(username, id):
     e = Result.objects.get(author=username, id=id)
     return e.experiment
+
+
+def is_status_final(username, id):
+    e = Result.objects.get(author=username, id=id)
+    return not e.status == "running"
