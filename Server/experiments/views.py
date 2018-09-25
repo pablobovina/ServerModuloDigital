@@ -43,9 +43,13 @@ def run_experiment(request, username, id):
     try:
         data = json.loads(read_experiment(username, int(id)))
         mgr = ResultManagerThread()
+        mgr.clean_dirs(username)
+        mgr.make_dirs(username)
         # dry - run
-        mgr.new_dry_run(username, data).run()
+        mgr.new_dry_run(username, data)
         # real - run with new data because previous is dirty
+        mgr.clean_dirs(username)
+        mgr.make_dirs(username)
         data = json.loads(read_experiment(username, int(id)))
         id_result = create_result(username, data)
         id_thread = create_manager_thread(username, id_result)
