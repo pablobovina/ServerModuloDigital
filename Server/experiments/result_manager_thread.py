@@ -10,9 +10,6 @@ from result import update_result_status_running, \
                 update_result_status_stop
 import threading
 from os.path import join
-from shutil import rmtree
-from os import makedirs
-
 
 class ResultManagerThread(object):
     data = None
@@ -103,25 +100,3 @@ class ResultManagerThread(object):
         self.error_d = join(".", "error", user)
         self.mod_dig = DryRun(parent=self).run()
         return True
-
-    def clean_dirs(self, user):
-        self.out_d = join(".", "out", user)
-        self.log_d = join(".", "log", user)
-        self.error_d = join(".", "error", user)
-        try:
-            rmtree(self.out_d, ignore_errors=True)
-            rmtree(self.error_d, ignore_errors=True)
-            rmtree(self.log_d, ignore_errors=True)
-        except Exception as e:
-            print e.message
-
-    def make_dirs(self, user):
-        self.out_d = join(".", "out", user)
-        self.log_d = join(".", "log", user)
-        self.error_d = join(".", "error", user)
-        try:
-            makedirs(self.out_d)
-            makedirs(self.error_d)
-            makedirs(self.log_d)
-        except Exception as e:
-            print e.message

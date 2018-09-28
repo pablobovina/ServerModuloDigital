@@ -8,6 +8,9 @@ from result_manager_thread import ResultManagerThread
 from manager_thread import create_manager_thread, get_pid_name_by_result_id, filter_running
 from result import create_result, result_by_user, result_to_zip, get_result_experiment_by_user_and_id, is_status_final
 import json
+from os.path import join
+from shutil import rmtree
+from os import makedirs
 
 
 @login_required
@@ -43,13 +46,11 @@ def run_experiment(request, username, id):
     try:
         data = json.loads(read_experiment(username, int(id)))
         mgr = ResultManagerThread()
-        mgr.clean_dirs(username)
-        mgr.make_dirs(username)
+        DirManager(username)
         # dry - run
         mgr.new_dry_run(username, data)
         # real - run with new data because previous is dirty
-        mgr.clean_dirs(username)
-        mgr.make_dirs(username)
+        DirManager(username)
         data = json.loads(read_experiment(username, int(id)))
         id_result = create_result(username, data)
         id_thread = create_manager_thread(username, id_result)
@@ -110,3 +111,32 @@ def stop_all(request, username):
         return HttpResponse(json.dumps({"error": e.message}),
                             status=500,
                             content_type="application/json")
+
+
+class DirManager:
+
+    def __init__(self, user):
+        self._clean_dirs(user)
+        self._make_dirs(user)
+
+    def _clean_dirs(self, user):
+        self.out_d = join(".", "out", user)
+        self.log_d = join(".", "log", user)
+        self.error_d = join(".", "error", user)
+        try:
+            rmtree(self.out_d, ignore_errors=True)
+            rmtree(self.error_d, ignore_errors=True)
+            rmtree(self.log_d, ignore_errors=True)
+        except Exception as e:
+            print e.message
+
+    def _make_dirs(self, user):
+        self.out_d = join(".", "out", user)
+        self.log_d = join(".", "log", user)
+        self.error_d = join(".", "error", user)
+        try:
+            makedirs(self.out_d)
+            makedirs(self.error_d)
+            makedirs(self.log_d)
+        except Exception as e:
+            print e.message
