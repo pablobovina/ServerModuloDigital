@@ -50,7 +50,6 @@ def run_experiment(request, username, id):
         # dry - run
         mgr.new_dry_run(username, data)
         # real - run with new data because previous is dirty
-        DirManager(username)
         data = json.loads(read_experiment(username, int(id)))
         id_result = create_result(username, data)
         id_thread = create_manager_thread(username, id_result)
@@ -116,27 +115,25 @@ def stop_all(request, username):
 class DirManager:
 
     def __init__(self, user):
-        self._clean_dirs(user)
-        self._make_dirs(user)
-
-    def _clean_dirs(self, user):
-        self.out_d = join(".", "out", user)
-        self.log_d = join(".", "log", user)
-        self.error_d = join(".", "error", user)
         try:
-            rmtree(self.out_d, ignore_errors=True)
-            rmtree(self.error_d, ignore_errors=True)
-            rmtree(self.log_d, ignore_errors=True)
+            self.out_d = join(".", "out", user)
+            self.log_d = join(".", "log", user)
+            self.error_d = join(".", "error", user)
+            rmtree(self.out_d)
+            rmtree(self.error_d)
+            rmtree(self.log_d)
         except Exception as e:
-            print e.message
+            log_file_path = join(self.log_d, "modDig.log")
+            open(log_file_path, "w").close()
+            print "limpiamos {}".format(log_file_path)
 
-    def _make_dirs(self, user):
-        self.out_d = join(".", "out", user)
-        self.log_d = join(".", "log", user)
-        self.error_d = join(".", "error", user)
         try:
             makedirs(self.out_d)
             makedirs(self.error_d)
             makedirs(self.log_d)
+            log_file_path = join(self.log_d, "modDig.log")
+            open(log_file_path, "w").close()
+            print "creamos {}".format(log_file_path)
         except Exception as e:
             print e.message
+            print e.strerror
