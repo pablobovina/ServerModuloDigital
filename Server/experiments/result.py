@@ -73,6 +73,12 @@ def update_result_status_stop(username, id):
     e.save()
 
 
+def acq_sum(l1, l2):
+    assert len(l1) == len(l2)
+    for i in xrange(len(l1)):
+        l2[i][1] = l1[i][1] + l2[i][1]
+
+
 def result_to_zip(username, id):
     e = Result.objects.get(author=username, id=id)
 
@@ -83,7 +89,9 @@ def result_to_zip(username, id):
     zip = zipfile.ZipFile(zip_buffer, "w")
 
     acquisitions_channel_a = data["a"]
+    c_acq_ch_a = [[i, 0] for i in xrange(len(acquisitions_channel_a[0]))]
     for acquisition in acquisitions_channel_a:
+        acq_sum(acquisition, c_acq_ch_a)
         buffer = StringIO.StringIO()
         csv_out = csv.writer(buffer)
         csv_out.writerow(["x", "y"])
@@ -96,9 +104,25 @@ def result_to_zip(username, id):
         zip.writestr("./report/channel_a/{}.csv".format(counter), sio_buffer_value)
         counter+=1
 
+    # write acq sum for A
+    sio_buffer_values = []
+    buffer = StringIO.StringIO()
+    csv_out = csv.writer(buffer)
+    csv_out.writerow(["x", "y"])
+    for sample in c_acq_ch_a:
+        csv_out.writerow(sample)
+    sio_buffer_values.append(buffer.getvalue())
+    counter = 0
+    for sio_buffer_value in sio_buffer_values:
+        zip.writestr("./report/channel_a/total_{}.csv".format(counter), sio_buffer_value)
+        counter += 1
+
+
     sio_buffer_values = []
     acquisitions_channel_b = data["b"]
+    c_acq_ch_b = [[i, 0] for i in xrange(len(acquisitions_channel_b[0]))]
     for acquisition in acquisitions_channel_b:
+        acq_sum(acquisition, c_acq_ch_b)
         buffer = StringIO.StringIO()
         csv_out = csv.writer(buffer)
         csv_out.writerow(["x", "y"])
@@ -109,6 +133,19 @@ def result_to_zip(username, id):
     counter = 0
     for sio_buffer_value in sio_buffer_values:
         zip.writestr("./report/channel_b/{}.csv".format(counter), sio_buffer_value)
+        counter += 1
+
+    # write acq sum for B
+    sio_buffer_values = []
+    buffer = StringIO.StringIO()
+    csv_out = csv.writer(buffer)
+    csv_out.writerow(["x", "y"])
+    for sample in c_acq_ch_b:
+        csv_out.writerow(sample)
+    sio_buffer_values.append(buffer.getvalue())
+    counter = 0
+    for sio_buffer_value in sio_buffer_values:
+        zip.writestr("./report/channel_b/total_{}.csv".format(counter), sio_buffer_value)
         counter += 1
 
     codecinfo = codecs.lookup("utf8")
