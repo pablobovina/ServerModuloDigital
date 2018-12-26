@@ -8,7 +8,7 @@ import cStringIO
 import codecs
 import pytz
 from pytz import country_timezones, timezone
-
+from django.db import reset_queries, close_old_connections
 
 def create_result(username, data):
     experiment = json.dumps(data)
@@ -30,6 +30,9 @@ def update_result_data(username, id, data):
     e.date_time = datetime.now(pytz.timezone(country_timezones["AR"][1]))
     e.data = json.dumps(d)
     e.save()
+    # reset_queries()
+    # close_old_connections()
+
 
 
 def update_result_err(username, id, data):
@@ -45,6 +48,8 @@ def update_result_log(username, id, data):
     e.date_time = datetime.now(pytz.timezone(country_timezones["AR"][1]))
     e.log = json.dumps(data)
     e.save()
+    # reset_queries()
+    # close_old_connections()
 
 
 def update_result_status_finish(username, id):

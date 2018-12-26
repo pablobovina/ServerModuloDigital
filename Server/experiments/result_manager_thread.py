@@ -10,6 +10,7 @@ from result import update_result_status_running, \
                 update_result_status_stop
 import threading
 from os.path import join
+from django.db import reset_queries, close_old_connections
 
 class ResultManagerThread(object):
     data = None
@@ -46,9 +47,13 @@ class ResultManagerThread(object):
         self.name = self.mod_dig.getName()
         update_result_status_running(self.user, self.id_result)
         bind_manager_thread(self.user, self.id_thread, self.pid, self.name)
+        reset_queries()
+        close_old_connections()
 
     def on_partial(self, exp):
         update_result_data(self.user, self.id_result, exp)
+        reset_queries()
+        close_old_connections()
 
     def on_error(self, err, log_lines):
         # validar que termino y actualizar el estado en la BD
@@ -56,15 +61,21 @@ class ResultManagerThread(object):
         update_result_err(self.user, self.id_result, err)
         update_result_log(self.user, self.id_result, log_lines)
         finish_manager_thread(self.user, self.id_thread, self.pid)
+        reset_queries()
+        close_old_connections()
 
     def on_log(self, log_lines):
         update_result_log(self.user, self.id_result, log_lines)
+        reset_queries()
+        close_old_connections()
 
     def on_finish(self, log_lines):
         # validar que termino y actualizar el estado en la BD
         update_result_status_finish(self.user, self.id_result)
         update_result_log(self.user, self.id_result, log_lines)
         finish_manager_thread(self.user, self.id_thread, self.pid)
+        reset_queries()
+        close_old_connections()
 
     def stop_thread(self, ident, name):
         for t in threading.enumerate():
@@ -78,6 +89,8 @@ class ResultManagerThread(object):
         update_result_err(self.user, self.id_result, err)
         update_result_log(self.user, self.id_result, log_lines)
         finish_manager_thread(self.user, self.id_thread, self.pid)
+        reset_queries()
+        close_old_connections()
 
     def kill_all(self, user):
         t_list = filter_running()
@@ -90,6 +103,8 @@ class ResultManagerThread(object):
                     update_killer(user, t.id)
                     res.append([t.pid, t.author, user])
         self.killer = res
+        reset_queries()
+        close_old_connections()
         return res
 
     def new_dry_run(self, user, data):
